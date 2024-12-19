@@ -7,7 +7,7 @@ const pasien = {};
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// ------------------- Bagian Pasien (Persis Seperti Kode Anda) -------------------
+// ------------------- Bagian Pasien -------------------
 
 // POST API: Tambah pasien
 app.post('/api/pasien', (req, res) => {
@@ -48,31 +48,9 @@ app.delete('/api/pasien/:id', (req, res) => {
     res.status(200).json({ message: `Data pasien dengan ID ${id} berhasil dihapus` });
 });
 
-// Start the server (sesuai dengan kode Anda, tetap menggunakan app.listen)
-const PORT = 5000;
-app.listen(PORT, () => console.log(`Server berjalan di port ${PORT}`));
-
-// ------------------- Bagian Tambahan: Ruangan, Pasien dalam Ruangan, & Sensor -------------------
+// ------------------- Bagian Ruangan & Sensor -------------------
 
 // In-memory storage untuk data ruangan
-// Format:
-// dataRuangan = {
-//   "ruangan_1": {
-//     "nama_ruangan": "ICU",
-//     "patients": {
-//       "pasien_1": {
-//         "nama": "Budi",
-//         "usia": 30,
-//         "diagnosa": "Demam",
-//         "sensors": {
-//           "loadcell": { "value": 200, "unit": "ml" },
-//           "color_sensor": { "value": "hijau", "detail": "Normal" },
-//           "laju_infus": { "value": 20, "unit": "tetes/menit" }
-//         }
-//       }
-//     }
-//   }
-// }
 const dataRuangan = {};
 
 // POST /api/ruangan - Tambah ruangan
@@ -183,3 +161,6 @@ app.post('/api/ruangan/:ruanganId/pasien/:pasienId/sensor', (req, res) => {
         pasien: dataRuangan[ruanganId].patients[pasienId]
     });
 });
+
+// Ekspor app untuk Vercel
+module.exports = app;
