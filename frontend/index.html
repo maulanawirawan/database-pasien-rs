@@ -53,6 +53,17 @@
             margin-bottom: 10px;
             border-bottom: 1px solid #ccc;
         }
+        .delete-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
     </style>
 </head>
 <body>
@@ -70,7 +81,7 @@
 
     <!-- Integrasi dengan Backend API -->
     <script>
-        const BASE_URL = "https://database-pasien-rssakit.vercel.app/"; // URL backend Anda
+        const BASE_URL = "https://database-pasien-rssakit.vercel.app/api"; // URL backend Anda
 
         // Menyimpan Data ke API Backend
         const form = document.getElementById("form-pasien");
@@ -120,9 +131,23 @@
                             <p><strong>Nama:</strong> ${pasien.nama}</p>
                             <p><strong>Usia:</strong> ${pasien.usia}</p>
                             <p><strong>Diagnosa:</strong> ${pasien.diagnosa}</p>
+                            <button class="delete-btn" onclick="deletePasien('${id}')">Hapus</button>
                         `;
                         listPasien.appendChild(div);
                     }
+                })
+                .catch((error) => console.error("Terjadi kesalahan:", error));
+        }
+
+        // Hapus Data Pasien
+        function deletePasien(id) {
+            fetch(`${BASE_URL}/pasien/${id}`, {
+                method: "DELETE"
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    alert(data.message);
+                    loadData();  // Refresh data after deletion
                 })
                 .catch((error) => console.error("Terjadi kesalahan:", error));
         }
