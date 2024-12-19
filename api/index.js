@@ -1,15 +1,14 @@
 const express = require('express');
 const app = express();
 
-// In-memory storage for pasien data (global)
-const pasien = {};
-
-// Middleware to parse JSON bodies
+// Middleware untuk parsing JSON
 app.use(express.json());
 
-// ------------------- Bagian Pasien (Persis Seperti Kode Anda) -------------------
+// In-memory storage untuk pasien
+const pasien = {};
 
-// POST API: Tambah pasien
+// ------------------- Bagian Pasien -------------------
+// POST: Tambah pasien
 app.post('/api/pasien', (req, res) => {
     const { id, nama, usia, diagnosa } = req.body;
 
@@ -24,12 +23,12 @@ app.post('/api/pasien', (req, res) => {
     });
 });
 
-// GET API: Ambil semua data pasien
+// GET: Ambil semua data pasien
 app.get('/api/pasien', (req, res) => {
     res.status(200).json(pasien);
 });
 
-// GET API: Ambil pasien berdasarkan ID
+// GET: Ambil pasien berdasarkan ID
 app.get('/api/pasien/:id', (req, res) => {
     const { id } = req.params;
     if (!pasien[id]) {
@@ -38,41 +37,17 @@ app.get('/api/pasien/:id', (req, res) => {
     res.status(200).json(pasien[id]);
 });
 
-// DELETE API: Hapus pasien berdasarkan ID
+// DELETE: Hapus pasien berdasarkan ID
 app.delete('/api/pasien/:id', (req, res) => {
     const { id } = req.params;
     if (!pasien[id]) {
         return res.status(404).json({ error: 'Data pasien tidak ditemukan' });
     }
     delete pasien[id];
-    res.status(200).json({ message: Data pasien dengan ID ${id} berhasil dihapus });
+    res.status(200).json({ message: `Data pasien dengan ID ${id} berhasil dihapus` });
 });
 
-// Start the server (sesuai dengan kode Anda, tetap menggunakan app.listen)
-const PORT = 5000;
-app.listen(PORT, () => console.log(Server berjalan di port ${PORT}));
-
-// ------------------- Bagian Tambahan: Ruangan, Pasien dalam Ruangan, & Sensor -------------------
-
-// In-memory storage untuk data ruangan
-// Format:
-// dataRuangan = {
-//   "ruangan_1": {
-//     "nama_ruangan": "ICU",
-//     "patients": {
-//       "pasien_1": {
-//         "nama": "Budi",
-//         "usia": 30,
-//         "diagnosa": "Demam",
-//         "sensors": {
-//           "loadcell": { "value": 200, "unit": "ml" },
-//           "color_sensor": { "value": "hijau", "detail": "Normal" },
-//           "laju_infus": { "value": 20, "unit": "tetes/menit" }
-//         }
-//       }
-//     }
-//   }
-// }
+// ------------------- Bagian Ruangan, Pasien dalam Ruangan, & Sensor -------------------
 const dataRuangan = {};
 
 // POST /api/ruangan - Tambah ruangan
@@ -91,7 +66,7 @@ app.post('/api/ruangan', (req, res) => {
     res.status(201).json({ message: 'Ruangan berhasil ditambahkan', ruangan: dataRuangan[id] });
 });
 
-// GET /api/ruangan - Ambil semua ruangan dan pasien di dalamnya
+// GET /api/ruangan - Ambil semua ruangan
 app.get('/api/ruangan', (req, res) => {
     res.status(200).json(dataRuangan);
 });
@@ -144,7 +119,7 @@ app.get('/api/ruangan/:ruanganId/pasien', (req, res) => {
     res.status(200).json(dataRuangan[ruanganId].patients);
 });
 
-// GET /api/ruangan/:ruanganId/pasien/:pasienId - Ambil data pasien tertentu di suatu ruangan
+// GET /api/ruangan/:ruanganId/pasien/:pasienId
 app.get('/api/ruangan/:ruanganId/pasien/:pasienId', (req, res) => {
     const { ruanganId, pasienId } = req.params;
     if (!dataRuangan[ruanganId]) {
@@ -182,4 +157,10 @@ app.post('/api/ruangan/:ruanganId/pasien/:pasienId/sensor', (req, res) => {
         message: 'Data sensor pasien berhasil diperbarui',
         pasien: dataRuangan[ruanganId].patients[pasienId]
     });
+});
+
+// Start the server setelah semua route terdefinisi
+const PORT = 5000;
+app.listen(PORT, () => {
+    console.log(`Server berjalan di port ${PORT}`);
 });
