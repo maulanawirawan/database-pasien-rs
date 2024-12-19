@@ -48,7 +48,7 @@ app.delete('/api/pasien/:id', (req, res) => {
     res.status(200).json({ message: `Data pasien dengan ID ${id} berhasil dihapus` });
 });
 
-// ------------------- Bagian Ruangan & Sensor -------------------
+// ------------------- Bagian Ruangan -------------------
 
 // In-memory storage untuk data ruangan
 const dataRuangan = {};
@@ -122,45 +122,13 @@ app.get('/api/ruangan/:ruanganId/pasien', (req, res) => {
     res.status(200).json(dataRuangan[ruanganId].patients);
 });
 
-// GET /api/ruangan/:ruanganId/pasien/:pasienId - Ambil data pasien tertentu di suatu ruangan
-app.get('/api/ruangan/:ruanganId/pasien/:pasienId', (req, res) => {
-    const { ruanganId, pasienId } = req.params;
-    if (!dataRuangan[ruanganId]) {
-        return res.status(404).json({ error: 'Ruangan tidak ditemukan' });
-    }
-    if (!dataRuangan[ruanganId].patients[pasienId]) {
-        return res.status(404).json({ error: 'Pasien tidak ditemukan di ruangan ini' });
-    }
-    res.status(200).json(dataRuangan[ruanganId].patients[pasienId]);
-});
+// ------------------- Untuk Local dan Deploy -------------------
 
-// POST /api/ruangan/:ruanganId/pasien/:pasienId/sensor - Update sensor pasien
-app.post('/api/ruangan/:ruanganId/pasien/:pasienId/sensor', (req, res) => {
-    const { ruanganId, pasienId } = req.params;
-    const { sensors } = req.body;
+// Gunakan `app.listen()` hanya jika dijalankan secara lokal
+const PORT = 5000;
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => console.log(`Server berjalan di port ${PORT}`));
+}
 
-    if (!dataRuangan[ruanganId]) {
-        return res.status(404).json({ error: 'Ruangan tidak ditemukan' });
-    }
-
-    if (!dataRuangan[ruanganId].patients[pasienId]) {
-        return res.status(404).json({ error: 'Pasien tidak ditemukan di ruangan ini' });
-    }
-
-    if (!sensors) {
-        return res.status(400).json({ error: 'Data sensor tidak lengkap' });
-    }
-
-    dataRuangan[ruanganId].patients[pasienId].sensors = {
-        ...dataRuangan[ruanganId].patients[pasienId].sensors,
-        ...sensors
-    };
-
-    res.status(200).json({
-        message: 'Data sensor pasien berhasil diperbarui',
-        pasien: dataRuangan[ruanganId].patients[pasienId]
-    });
-});
-
-// Ekspor app untuk Vercel
+// Ekspor app untuk Vercel (Serverless Function)
 module.exports = app;
