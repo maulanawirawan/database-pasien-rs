@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Database Pasien Rumah Sakit</title>
     <style>
         body {
@@ -11,7 +11,7 @@
             padding: 20px;
             background-color: #f4f4f9;
         }
-        h1 {
+        h1, h2 {
             text-align: center;
             color: #333;
         }
@@ -40,7 +40,7 @@
         form button:hover {
             background-color: #0056b3;
         }
-        .list-pasien {
+        .list-pasien, .list-ruangan {
             max-width: 600px;
             margin: 20px auto;
             background: #fff;
@@ -53,10 +53,27 @@
             margin-bottom: 10px;
             border-bottom: 1px solid #ccc;
         }
+        .ruangan-item {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ccc;
+        }
+        .pasien-item {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        .sensor-data {
+            margin-left: 20px;
+            font-size: 14px;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
     <h1>Database Pasien Rumah Sakit</h1>
+
+    <!-- Form input pasien global -->
     <form id="form-pasien">
         <input type="text" id="id" placeholder="ID Pasien" required>
         <input type="text" id="nama" placeholder="Nama Pasien" required>
@@ -64,14 +81,21 @@
         <input type="text" id="diagnosa" placeholder="Diagnosa" required>
         <button type="submit">Simpan Data</button>
     </form>
+
+    <!-- Daftar Pasien Global -->
     <div class="list-pasien" id="list-pasien">
         <h2>Daftar Pasien</h2>
+    </div>
+
+    <!-- (Opsional) Daftar Ruangan dan Pasien di Dalamnya -->
+    <div class="list-ruangan" id="list-ruangan">
+        <h2>Daftar Ruangan</h2>
     </div>
 
     <script>
         const BASE_URL = "https://database-pasien-rssakit.vercel.app/api"; // URL backend Anda
 
-        // Menyimpan Data ke API Backend
+        // Event Listener untuk form tambah pasien global
         const form = document.getElementById("form-pasien");
         form.addEventListener("submit", (e) => {
             e.preventDefault();
@@ -80,7 +104,7 @@
             const usia = document.getElementById("usia").value;
             const diagnosa = document.getElementById("diagnosa").value;
 
-            fetch(${BASE_URL}/pasien, {
+            fetch(`${BASE_URL}/pasien`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -96,15 +120,15 @@
                 .then((data) => {
                     alert("Data berhasil disimpan!");
                     form.reset();
-                    loadData();
+                    loadDataPasien();
                 })
                 .catch((error) => console.error("Terjadi kesalahan:", error));
         });
 
-        // Membaca Data dari API Backend
-        function loadData() {
+        // Fungsi load data pasien global
+        function loadDataPasien() {
             const listPasien = document.getElementById("list-pasien");
-            fetch(${BASE_URL}/pasien, {
+            fetch(`${BASE_URL}/pasien`, {
                 method: "GET"
             })
                 .then((response) => response.json())
@@ -119,7 +143,7 @@
                             <p><strong>Nama:</strong> ${pasien.nama}</p>
                             <p><strong>Usia:</strong> ${pasien.usia}</p>
                             <p><strong>Diagnosa:</strong> ${pasien.diagnosa}</p>
-                            <button onclick="deletePasien(${id})">Hapus</button>
+                            <button onclick="deletePasien('${id}')">Hapus</button>
                         `;
                         listPasien.appendChild(div);
                     }
@@ -127,21 +151,70 @@
                 .catch((error) => console.error("Terjadi kesalahan:", error));
         }
 
-        // Fungsi hapus pasien
+        // Fungsi hapus pasien global
         function deletePasien(id) {
-            fetch(${BASE_URL}/pasien/${id}, {
+            fetch(`${BASE_URL}/pasien/${id}`, {
                 method: "DELETE"
             })
                 .then((response) => response.json())
                 .then((data) => {
-                    alert(Pasien dengan ID ${id} berhasil dihapus.);
-                    loadData();
+                    alert(`Pasien dengan ID ${id} berhasil dihapus.`);
+                    loadDataPasien();
                 })
                 .catch((error) => console.error("Terjadi kesalahan:", error));
         }
 
+        // (Opsional) Fungsi load data ruangan dan pasien di dalamnya
+        // Panggil jika backend sudah mendukung endpoint /api/ruangan
+        function loadDataRuangan() {
+            const listRuangan = document.getElementById("list-ruangan");
+            fetch(`${BASE_URL}/ruangan`, {
+                method: "GET"
+            })
+            .then(res => res.json())
+            .then(data => {
+                listRuangan.innerHTML = "<h2>Daftar Ruangan</h2>";
+                for (let rId in data) {
+                    const r = data[rId];
+                    const ruanganDiv = document.createElement("div");
+                    ruanganDiv.className = "ruangan-item";
+                    ruanganDiv.innerHTML = `
+                        <h3>ID Ruangan: ${rId}</h3>
+                        <p><strong>Nama Ruangan:</strong> ${r.nama_ruangan}</p>
+                    `;
+
+                    // Daftar pasien dalam ruangan ini
+                    const patientsObj = r.patients || {};
+                    for (let pId in patientsObj) {
+                        const p = patientsObj[pId];
+                        const pasienDiv = document.createElement("div");
+                        pasienDiv.className = "pasien-item";
+                        pasienDiv.innerHTML = `
+                            <strong>ID Pasien:</strong> ${pId}<br>
+                            <strong>Nama:</strong> ${p.nama}<br>
+                            <strong>Usia:</strong> ${p.usia}<br>
+                            <strong>Diagnosa:</strong> ${p.diagnosa}<br>
+                            <div class="sensor-data">
+                                <strong>Data Sensor:</strong><br>
+                                Loadcell: ${p.sensors?.loadcell?.value} ${p.sensors?.loadcell?.unit}<br>
+                                Color Sensor: ${p.sensors?.color_sensor?.value} (${p.sensors?.color_sensor?.detail})<br>
+                                Laju Infus: ${p.sensors?.laju_infus?.value} ${p.sensors?.laju_infus?.unit}
+                            </div>
+                        `;
+                        ruanganDiv.appendChild(pasienDiv);
+                    }
+
+                    listRuangan.appendChild(ruanganDiv);
+                }
+            })
+            .catch(error => console.error("Terjadi kesalahan:", error));
+        }
+
         // Panggil Load Data saat halaman dimuat
-        window.onload = loadData;
+        window.onload = function() {
+            loadDataPasien();
+            loadDataRuangan(); // panggil ini hanya jika Anda ingin menampilkan data ruangan
+        };
     </script>
 </body>
 </html>
