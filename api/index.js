@@ -7,7 +7,7 @@ const pasien = {};
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// ------------------- Bagian Pasien -------------------
+// ------------------- Bagian Pasien (Persis Seperti Kode Anda) -------------------
 
 // POST API: Tambah pasien
 app.post('/api/pasien', (req, res) => {
@@ -45,12 +45,34 @@ app.delete('/api/pasien/:id', (req, res) => {
         return res.status(404).json({ error: 'Data pasien tidak ditemukan' });
     }
     delete pasien[id];
-    res.status(200).json({ message: `Data pasien dengan ID ${id} berhasil dihapus` });
+    res.status(200).json({ message: Data pasien dengan ID ${id} berhasil dihapus });
 });
 
-// ------------------- Bagian Ruangan -------------------
+// Start the server (sesuai dengan kode Anda, tetap menggunakan app.listen)
+const PORT = 5000;
+app.listen(PORT, () => console.log(Server berjalan di port ${PORT}));
+
+// ------------------- Bagian Tambahan: Ruangan, Pasien dalam Ruangan, & Sensor -------------------
 
 // In-memory storage untuk data ruangan
+// Format:
+// dataRuangan = {
+//   "ruangan_1": {
+//     "nama_ruangan": "ICU",
+//     "patients": {
+//       "pasien_1": {
+//         "nama": "Budi",
+//         "usia": 30,
+//         "diagnosa": "Demam",
+//         "sensors": {
+//           "loadcell": { "value": 200, "unit": "ml" },
+//           "color_sensor": { "value": "hijau", "detail": "Normal" },
+//           "laju_infus": { "value": 20, "unit": "tetes/menit" }
+//         }
+//       }
+//     }
+//   }
+// }
 const dataRuangan = {};
 
 // POST /api/ruangan - Tambah ruangan
@@ -122,13 +144,42 @@ app.get('/api/ruangan/:ruanganId/pasien', (req, res) => {
     res.status(200).json(dataRuangan[ruanganId].patients);
 });
 
-// ------------------- Untuk Local dan Deploy -------------------
+// GET /api/ruangan/:ruanganId/pasien/:pasienId - Ambil data pasien tertentu di suatu ruangan
+app.get('/api/ruangan/:ruanganId/pasien/:pasienId', (req, res) => {
+    const { ruanganId, pasienId } = req.params;
+    if (!dataRuangan[ruanganId]) {
+        return res.status(404).json({ error: 'Ruangan tidak ditemukan' });
+    }
+    if (!dataRuangan[ruanganId].patients[pasienId]) {
+        return res.status(404).json({ error: 'Pasien tidak ditemukan di ruangan ini' });
+    }
+    res.status(200).json(dataRuangan[ruanganId].patients[pasienId]);
+});
 
-// Gunakan `app.listen()` hanya jika dijalankan secara lokal
-const PORT = 5000;
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.log(`Server berjalan di port ${PORT}`));
-}
+// POST /api/ruangan/:ruanganId/pasien/:pasienId/sensor - Update sensor pasien
+app.post('/api/ruangan/:ruanganId/pasien/:pasienId/sensor', (req, res) => {
+    const { ruanganId, pasienId } = req.params;
+    const { sensors } = req.body;
 
-// Ekspor app untuk Vercel (Serverless Function)
-module.exports = app;
+    if (!dataRuangan[ruanganId]) {
+        return res.status(404).json({ error: 'Ruangan tidak ditemukan' });
+    }
+
+    if (!dataRuangan[ruanganId].patients[pasienId]) {
+        return res.status(404).json({ error: 'Pasien tidak ditemukan di ruangan ini' });
+    }
+
+    if (!sensors) {
+        return res.status(400).json({ error: 'Data sensor tidak lengkap' });
+    }
+
+    dataRuangan[ruanganId].patients[pasienId].sensors = {
+        ...dataRuangan[ruanganId].patients[pasienId].sensors,
+        ...sensors
+    };
+
+    res.status(200).json({
+        message: 'Data sensor pasien berhasil diperbarui',
+        pasien: dataRuangan[ruanganId].patients[pasienId]
+    });
+});
