@@ -43,9 +43,10 @@ app.delete('/api/pasien/:id', (req, res) => {
         return res.status(404).json({ error: 'Data pasien tidak ditemukan' });
     }
     delete pasien[id];
-    res.status(200).json({ message: Data pasien dengan ID ${id} berhasil dihapus });
+    res.status(200).json({ message: `Data pasien dengan ID ${id} berhasil dihapus` });
 });
 
 // Start the server
 const PORT = 5000;
-app.listen(PORT, () => console.log(Server berjalan di port ${PORT}));
+app.listen(PORT, () => console.log(`Server berjalan di port ${PORT}`));
+
