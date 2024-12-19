@@ -1,52 +1,173 @@
-const express = require('express');
-const app = express();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        form input, form button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        form button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #0056b3;
+        }
+        .list-pasien {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .data-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        .room {
+            background: #e9f7fe;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .room p {
+            margin: 5px 0;
+        }
+        .delete-btn {
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            background-color: darkred;
+        }
+    </style>
+</head>
+<body>
+    <h1>Monitoring Dashboard</h1>
 
-// In-memory storage for pasien data
-const pasien = {};
+    <!-- Form to Add Data (Patient) -->
+    <form id="form-pasien">
+        <input type="text" id="id" placeholder="ID Pasien" required>
+        <input type="text" id="nama" placeholder="Nama Pasien" required>
+        <input type="number" id="usia" placeholder="Usia Pasien" required>
+        <input type="text" id="diagnosa" placeholder="Diagnosa" required>
+        <button type="submit">Simpan Data</button>
+    </form>
 
-// Middleware to parse JSON bodies
-app.use(express.json());
+    <div id="rooms-dashboard">
+        <h2>Daftar Pasien / Room Monitoring</h2>
+        <!-- Real-time data from rooms will be populated here -->
+    </div>
 
-// POST API: Tambah pasien
-app.post('/api/pasien', (req, res) => {
-    const { id, nama, usia, diagnosa } = req.body;
+    <script>
+        const BASE_URL = "https://database-pasien-rssakit.vercel.app/api"; // URL backend Anda
 
-    if (!id || !nama || !usia || !diagnosa) {
-        return res.status(400).json({ error: 'Data tidak lengkap' });
-    }
+        // Menyimpan Data ke API Backend
+        const form = document.getElementById("form-pasien");
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const id = document.getElementById("id").value;
+            const nama = document.getElementById("nama").value;
+            const usia = document.getElementById("usia").value;
+            const diagnosa = document.getElementById("diagnosa").value;
 
-    pasien[id] = { nama, usia, diagnosa };
-    res.status(201).json({
-        message: 'Data pasien berhasil ditambahkan',
-        pasien: pasien[id]
-    });
-});
+            fetch(`${BASE_URL}/pasien`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: id,
+                    nama: nama,
+                    usia: parseInt(usia),
+                    diagnosa: diagnosa
+                })
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                alert("Data berhasil disimpan!");
+                form.reset();
+                loadData();
+            })
+            .catch((error) => console.error("Terjadi kesalahan:", error));
+        });
 
-// GET API: Ambil semua data pasien
-app.get('/api/pasien', (req, res) => {
-    res.status(200).json(pasien);
-});
+        // Membaca Data dari API Backend (Display All Pasien)
+        function loadData() {
+            const roomsDashboard = document.getElementById("rooms-dashboard");
+            fetch(`${BASE_URL}/pasien`, {
+                method: "GET"
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                roomsDashboard.innerHTML = "<h2>Daftar Pasien / Room Monitoring</h2>";
+                for (let id in data) {
+                    const pasien = data[id];
+                    const roomElement = document.createElement("div");
+                    roomElement.classList.add("room");
+                    
+                    roomElement.innerHTML = `
+                        <h3>Room: ${id}</h3>
+                        <p><strong>Nama:</strong> ${pasien.nama}</p>
+                        <p><strong>Usia:</strong> ${pasien.usia}</p>
+                        <p><strong>Diagnosa:</strong> ${pasien.diagnosa}</p>
+                        <button class="delete-btn" onclick="deletePasien(${id})">Hapus</button>
+                    `;
+                    
+                    roomsDashboard.appendChild(roomElement);
+                }
+            })
+            .catch((error) => console.error("Terjadi kesalahan:", error));
+        }
 
-// GET API: Ambil pasien berdasarkan ID
-app.get('/api/pasien/:id', (req, res) => {
-    const { id } = req.params;
-    if (!pasien[id]) {
-        return res.status(404).json({ error: 'Data pasien tidak ditemukan' });
-    }
-    res.status(200).json(pasien[id]);
-});
+        // Fungsi hapus pasien
+        function deletePasien(id) {
+            fetch(`${BASE_URL}/pasien/${id}`, {
+                method: "DELETE"
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                alert(`Pasien dengan ID ${id} berhasil dihapus.`);
+                loadData();
+            })
+            .catch((error) => console.error("Terjadi kesalahan:", error));
+        }
 
-// DELETE API: Hapus pasien berdasarkan ID
-app.delete('/api/pasien/:id', (req, res) => {
-    const { id } = req.params;
-    if (!pasien[id]) {
-        return res.status(404).json({ error: 'Data pasien tidak ditemukan' });
-    }
-    delete pasien[id];
-    res.status(200).json({ message: `Data pasien dengan ID ${id} berhasil dihapus` });
-});
-
-// Start the server
-const PORT = 5000;
-app.listen(PORT, () => console.log(`Server berjalan di port ${PORT}`));
-
+        // Panggil Load Data saat halaman dimuat
+        window.onload = loadData;
+    </script>
+</body>
+</html>
