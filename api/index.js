@@ -24,8 +24,6 @@ app.use(express.json());
 // }
 const dataRuangan = {};
 
-// Endpoint untuk manajemen ruangan
-
 // POST /api/ruangan - Tambah ruangan
 app.post('/api/ruangan', (req, res) => {
     const { id, nama_ruangan } = req.body;
@@ -135,6 +133,6 @@ app.post('/api/ruangan/:ruanganId/pasien/:pasienId/sensor', (req, res) => {
     });
 });
 
-// Server lokal (untuk pengujian lokal)
-const PORT = 5000;
-app.listen(PORT, () => console.log(`Server berjalan di port ${PORT}`));
+// Tidak perlu app.listen() untuk Vercel.
+// Cukup export 'app'.
+module.exports = app;
