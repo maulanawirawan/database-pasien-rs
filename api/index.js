@@ -1,17 +1,17 @@
-// File utama backend 
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-
+const express = require('express');
 const app = express();
-app.use(bodyParser.json());
-app.use(cors());
+app.use(express.json());
 
-const pasien = {
-    "12345": { nama: "John Doe", usia: 30, diagnosa: "Demam" },
-    "67890": { nama: "Jane Smith", usia: 25, diagnosa: "Flu" }
-};
+const pasien = {};
 
-app.get("/pasien", (req, res) => res.json(pasien));
+// POST API: Tambah Data Pasien
+app.post('/api/pasien', (req, res) => {
+    const { id, nama, usia, diagnosa } = req.body;
+    if (!id || !nama || !usia || !diagnosa) {
+        return res.status(400).json({ error: 'Data tidak lengkap' });
+    }
+    pasien[id] = { nama, usia, diagnosa };
+    res.status(201).json({ message: 'Data pasien berhasil ditambahkan', pasien: pasien[id] });
+});
 
-app.listen(5000, () => console.log("Server berjalan di port 5000"));
+app.listen(5000, () => console.log('Server berjalan di port 5000'));
